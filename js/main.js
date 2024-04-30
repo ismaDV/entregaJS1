@@ -1,67 +1,119 @@
-// PARA LA SEGUNDA PRE ENTREGA
+// PARA LA TERCERA PRE ENTREGA
 // simulador de e-commerce de una tienda de galletitas
 
-// Ingresar nombre y saludarlo
-let nombreIngresado = prompt ("Ingrese su Nombre");
-function saludar (nombreIngresado) {
-    alert ("hola, " + nombreIngresado + ", " + "Bienvenido a nuestra pagina" )
-}
-saludar(nombreIngresado)
+// Obtener el elemento del botón y los div de productos y carrito
+const mostrarProductosBtn = document.getElementById('mostrarProductosBtn');
+const productosDiv = document.getElementById('productos');
+const carritoDiv = document.getElementById('carrito');
+const precioTotalDiv = document.getElementById('precioTotal');
 
-//mostrarle en un alert las opciones para comprar
-//const productos = [ galletitas,muffins,]
-
-//let productos = 
-//function mostrarProductos (productos) {
-  //  alert ('Productos:\n\n' + productos)
-//}
-//mostrarProductos(productos)
-
-
-// Definir productos como objetos con nombre, precio y cantidad disponible
-let productos = [
-    { nombre: "GALLETAS", precio: 300, cantidadDisponible: 100 },
-    { nombre: "MUFFINS", precio: 1500, cantidadDisponible: 100 },
-    { nombre: "TORTA", precio: 30000, cantidadDisponible: 0 }
-];
+// Array para almacenar los productos seleccionados en el carrito
+let carrito = [];
 
 // Función para mostrar los productos disponibles
 function mostrarProductos() {
-    let mensaje = "Productos disponibles:\n";
-    productos.forEach(producto => {
-        mensaje += `${producto.nombre}: $${producto.precio} - Disponibles: ${producto.cantidadDisponible}\n`;
-    });
-    alert(mensaje);
-}
+    // Obtener el contenedor de productos
+    const productosDiv = document.getElementById('productos');
 
-// Función para realizar la compra de un producto
-function comprarProducto(nombreProducto, cantidad) {
-
-     // Convertir el nombre del producto ingresado por el usuario a mayúsculas
-     nombreProducto = nombreProducto.toUpperCase();
-
-    let producto = productos.find(prod => prod.nombre.toUpperCase()=== nombreProducto);
-    if (producto) {
-        if (producto.cantidadDisponible >= cantidad) {
-            producto.cantidadDisponible -= cantidad;
-            let total = cantidad * producto.precio;
-            alert(`Has agregado al carrito de compra ${cantidad} ${nombreProducto} por un total de $${total}`);
-        } else {
-            alert(`Lo siento, no hay suficiente stock disponible para agregar al carrito ${cantidad} ${nombreProducto}`);
-        }
+    // Obtener los productos del localStorage o usar una lista predeterminada
+    let productos = localStorage.getItem('productos');
+    if (!productos || !Array.isArray(JSON.parse(productos))) {
+        // Si no hay productos en localStorage o no son un array válido, usar una lista predeterminada
+        productos = [
+            { nombre: "Galletas", precio: 1000 },
+            { nombre: "Muffins", precio: 2000 },
+            { nombre: "Tortas", precio: 5000 }
+        ];
+        // Guardar la lista predeterminada en localStorage
+        localStorage.setItem('productos', JSON.stringify(productos));
     } else {
-        alert("El producto seleccionado no está disponible.");
-    }
-}
-
-// Ciclo para interactuar con el usuario hasta que decida salir
-while (true) {
-    mostrarProductos();
-    let opcion = prompt("¿Qué producto deseas agregar al carrito? (Ingrese 'salir' para terminar)");
-    if (opcion.toLowerCase() === "salir") {
-        break;
+        // Convertir los datos del localStorage de JSON a un array
+        productos = JSON.parse(productos);
     }
 
-    let cantidad = parseInt(prompt(`¿Cuántos ${opcion} deseas agregar al carrito?`));
-    comprarProducto(opcion, cantidad);
+    // Mostrar los productos como tarjetas de Bootstrap en línea
+    productos.forEach(producto => {
+        // Crear la estructura de la tarjeta
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('col-md-4', 'mb-3', 'd-inline-block', 'mr-2'); // Agregar clase para mostrar en línea
+        cardDiv.innerHTML = `
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">${producto.nombre}</h5>
+                    <p class="card-text">Precio: $${producto.precio}</p>
+                    <input type="number" id="cantidad-${producto.nombre}" class="form-control mb-2" placeholder="Cantidad">
+                    <button class="agregarBtn btn btn-primary">Agregar al carrito</button>
+                </div>
+            </div>
+        `;
+
+        // Agregar la tarjeta al contenedor de productos
+        productosDiv.appendChild(cardDiv);
+
+        // Agregar evento click al botón de agregar al carrito
+        const agregarBtn = cardDiv.querySelector('.agregarBtn');
+        agregarBtn.addEventListener('click', () => {
+            const cantidadInput = cardDiv.querySelector(`#cantidad-${producto.nombre}`);
+            const cantidad = parseInt(cantidadInput.value);
+            if (cantidad > 0) {
+                agregarAlCarrito(producto, cantidad);
+                cantidadInput.value = ''; // Limpiar el valor del input después de agregar al carrito
+            }
+        });
+    });
 }
+
+// Función para agregar un producto al carrito
+function agregarAlCarrito(producto, cantidad) {
+    const productoEnCarrito = carrito.find(item => item.producto.nombre === producto.nombre);
+    if (productoEnCarrito) {
+        productoEnCarrito.cantidad += cantidad;
+    } else {
+        carrito.push({ producto, cantidad });
+    }
+    mostrarCarrito();
+}
+
+// Función para mostrar los productos en el carrito
+function mostrarCarrito() {
+    carritoDiv.innerHTML = ''; // Limpiar el contenido anterior
+
+    let precioTotal = 0; // Inicializar el precio total
+
+    // Mostrar los productos en el carrito
+    carrito.forEach(item => {
+        const productoDiv = document.createElement('div');
+        const precioProducto = item.producto.precio * item.cantidad; // Precio del producto individual
+        productoDiv.textContent = `${item.producto.nombre} - Cantidad: ${item.cantidad} - Precio: $${precioProducto}`;
+        carritoDiv.appendChild(productoDiv);
+        precioTotal += precioProducto; // Sumar el precio del producto actual al precio total
+    });
+
+    // Mostrar precio total
+    precioTotalDiv.textContent = `Precio final: $${precioTotal}`;
+}
+
+
+// Agregar evento click al botón de comprar
+comprarBtn.addEventListener('click', comprarProductos);
+
+
+// Función para comprar los productos en el carrito
+function comprarProductos() {
+    // Calcular el precio total
+    let precioTotal = 0;
+    carrito.forEach(item => {
+        precioTotal += item.producto.precio * item.cantidad;
+    });
+
+    // Mostrar alerta con el precio final
+    alert(`Gracias por tu compra! El precio total es: $${precioTotal}`);
+
+    // Después de la compra, vaciar el carrito
+    carrito = [];
+    mostrarCarrito();
+}
+
+
+// Mostrar los productos al cargar la página
+mostrarProductos();
