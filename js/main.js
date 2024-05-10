@@ -117,4 +117,3 @@ function comprarProductos() {
 
 // Mostrar los productos al cargar la página
 mostrarProductos();
-console.log(mostrarProductos)
